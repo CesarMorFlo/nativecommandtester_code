@@ -1,0 +1,61 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+build:
+  tags: [mysql]
+  stage: build
+  before_script:
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
+  script:
+    - call C:\"Program Files (x86)"\"Microsoft Visual Studio 12.0"\VC\vcvarsall.bat
+    - C:\Qt\5.8\msvc2013\bin\qmake.exe analytics_v2.pro -spec C:\Qt\5.8\msvc2013\mkspecs\win32-msvc2013 -o Makefile
+    - C:\Qt\Tools\QtCreator\bin\jom.exe -f Makefile
+    - cd extras\productionMockup
+    - C:\Qt\5.8\msvc2013\bin\qmake.exe productionMockup.pro -spec C:\Qt\5.8\msvc2013\mkspecs\win32-msvc2013 -o Makefile
+    - C:\Qt\Tools\QtCreator\bin\jom.exe -f Makefile
+  artifacts:
+    paths:
+      - tests\DBTest\release\tst_dbtesttest.exe
+      - tests\SimTest\release\tst_sim.exe
+      - tests\CheckCollectionTest\release\tst_checkcollectiontest.exe
+      - tests\HardwareTest\release\tst_xrayhardware.exe
+
+dbtest:
+  tags: [mysql]
+  stage: test
+  before_script:
+    - set Path=C:\Qt\5.8\msvc2013\bin;%Path%
+    - xcopy /s /q /y /i dbapi\libmysql.dll tests\DBTest\release\
+  script:
+    - tests\DBTest\release\tst_dbtesttest.exe
+
+simtest:
+  tags: [mysql]
+  stage: test
+  before_script:
+    - set Path=C:\opencv\x86\vc12\bin;C:\Qt\5.8\msvc2013\bin;%Path%
+    - xcopy /s /q /y /i dbapi\libmysql.dll tests\SimTest\release\
+  script:
+    - tests\SimTest\release\tst_sim.exe
+
+checkcollectiontest:
+  tags: [mysql]
+  stage: test
+  before_script:
+    - set Path=C:\opencv\x86\vc12\bin;C:\Qt\5.8\msvc2013\bin;%Path%
+    - xcopy /s /q /y /i dbapi\libmysql.dll tests\CheckCollectionTest\release\
+    - xcopy /s /q /y /i ksspiu\hm\aqudevice_code\aqulibrary\*.dll tests\CheckCollectionTest\release\
+  script:
+    - tests\CheckCollectionTest\release\tst_checkcollectiontest.exe
+
+hardwaretest:
+    tags: [mysql]
+    stage: test
+    before_script:
+     - set Path=C:\opencv\x86\vc12\bin;C:\Qt\5.8\msvc2013\bin;%Path%
+     - xcopy /s /q /y /i ksspiu\hm\aqudevice_code\aqulibrary\*.dll tests\HardwareTest\release\
+     - xcopy tests\HardwareTest\hardware-example.json tests\HardwareTest\release\ /d
+     - cd tests\HardwareTest\release
+    script:
+     - tst_xrayhardware.exe -n
+
