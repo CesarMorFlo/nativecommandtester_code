@@ -128,6 +128,7 @@ signals:
 	void endOfRecord();
 	void echoLocal(bool echo);
 
+
 private slots:
 	void socketError(QAbstractSocket::SocketError err);
 	void onReadyRead();
